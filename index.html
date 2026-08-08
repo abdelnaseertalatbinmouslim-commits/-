@@ -3,118 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>البوابة الإلكترونية لنتائج الامتحانات | كلية علوم الرياضة - جامعة أسيوط</title>
+    <title>نتائج الامتحانات - جامعة أسيوط</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="app-viewport">
-        <!-- Navigation Bar -->
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="univ-title">جامعة أسيوط</span>
-                <span class="faculty-title">كلية علوم الرياضة</span>
-            </div>
-            <div class="nav-controls">
-                <button id="toggleAdminBtn" class="btn-secondary-sm">لوحة الإدارة 🔒</button>
-            </div>
-        </nav>
+    <div class="background-bg"></div>
+    <div class="overlay"></div>
 
-        <main class="main-content">
-            <!-- Student Search Section -->
-            <section id="studentSection" class="view-card">
-                <div class="card-header">
-                    <h2>الاستعلام عن النتيجة</h2>
-                    <p>أدخل رقم الجلوس أو الرقم القومي المكون من 14 رقمًا</p>
-                </div>
+    <div class="app-wrapper">
+        <!-- Top Navbar -->
+        <header class="top-nav">
+            <button id="toggleAdminBtn" class="nav-btn">لوحة الإدارة 🔒</button>
+            <h1 class="portal-title">نتائج الامتحانات</h1>
+        </header>
+
+        <!-- Main Form Container -->
+        <main class="main-container">
+            <!-- Student Portal -->
+            <section id="studentSection" class="form-card">
+                <h2 class="card-title">ادخل البيانات المطلوبة</h2>
                 
-                <form id="searchForm" class="search-form" onsubmit="return false;">
-                    <div class="field-group">
-                        <input type="text" id="searchInput" placeholder="مثال: 10520 أو 30510082501234" autocomplete="off" required>
-                        <button type="submit" id="searchBtn" class="btn-primary">استعلام</button>
+                <form id="searchForm" onsubmit="return false;">
+                    <div class="input-field">
+                        <label>العام الدراسي</label>
+                        <select id="academicYear">
+                            <option value="">اختر العام الدراسي...</option>
+                            <option value="2025-2026" selected>2025 / 2026</option>
+                            <option value="2024-2025">2024 / 2025</option>
+                        </select>
                     </div>
+
+                    <div class="input-field">
+                        <label>الكليه</label>
+                        <select id="facultySelect">
+                            <option value="">اختر الكليه ...</option>
+                            <option value="sports" selected>كلية علوم الرياضة</option>
+                        </select>
+                    </div>
+
+                    <div class="input-field">
+                        <label>الفرقة</label>
+                        <select id="yearSelect">
+                            <option value="">اختر الفرقة ...</option>
+                            <option value="الفرقة الأولى">الفرقة الأولى</option>
+                            <option value="الفرقة الثانية">الفرقة الثانية</option>
+                            <option value="الفرقة الثالثة">الفرقة الثالثة</option>
+                            <option value="الفرقة الرابعة">الفرقة الرابعة</option>
+                        </select>
+                    </div>
+
+                    <div class="input-field">
+                        <label>القسم</label>
+                        <select id="deptSelect">
+                            <option value="">اختر القسم ...</option>
+                            <option value="تدريب رياضي">تدريب رياضي</option>
+                            <option value="إدارة رياضية">إدارة رياضية</option>
+                            <option value="مناهج وطرق تدريس">مناهج وطرق تدريس</option>
+                            <option value="علوم حركة">علوم حركة</option>
+                        </select>
+                    </div>
+
+                    <div class="input-field">
+                        <label>الشعبة</label>
+                        <select id="sectionSelect">
+                            <option value="">اختر الشعبة ...</option>
+                            <option value="عام">عام</option>
+                        </select>
+                    </div>
+
+                    <div class="input-field">
+                        <label>رقم الجلوس او اسم الطالب</label>
+                        <input type="text" id="searchInput" placeholder="ادخل رقم الجلوس او اسم الطالب" autocomplete="off">
+                    </div>
+
+                    <button type="submit" id="searchBtn" class="btn-submit">عرض النتيجه</button>
                 </form>
 
                 <div id="searchFeedback" class="feedback-msg hidden"></div>
 
-                <!-- Result Presentation Card -->
-                <article id="resultCard" class="result-card hidden">
-                    <div class="result-header">
-                        <div class="student-info">
+                <!-- Result Sheet Modal -->
+                <div id="resultModal" class="result-modal hidden">
+                    <div class="result-box">
+                        <div class="res-header">
                             <h3 id="resName">--</h3>
-                            <span id="resDepartment" class="badge-dept">--</span>
+                            <span id="resStatus" class="status-badge">--</span>
                         </div>
-                        <div class="status-box" id="statusBox">
-                            <span id="resStatus">--</span>
+                        <div class="res-grid">
+                            <div><strong>رقم الجلوس:</strong> <span id="resSeat">--</span></div>
+                            <div><strong>الرقم القومي:</strong> <span id="resNID">--</span></div>
+                            <div><strong>الفرقة:</strong> <span id="resYear">--</span></div>
+                            <div><strong>القسم:</strong> <span id="resDept">--</span></div>
+                            <div><strong>المجموع الكلي:</strong> <span id="resTotal">--</span></div>
+                            <div><strong>النسبة:</strong> <span id="resPercentage">--</span></div>
                         </div>
+                        <button onclick="window.print()" class="btn-print">طباعة النتيجة</button>
                     </div>
-
-                    <div class="metrics-grid">
-                        <div class="metric-item">
-                            <span class="label">رقم الجلوس</span>
-                            <span id="resSeat" class="val">--</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">الرقم القومي</span>
-                            <span id="resNID" class="val">--</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">الفرقة الدراسية</span>
-                            <span id="resYear" class="val">--</span>
-                        </div>
-                        <div class="metric-item highlight">
-                            <span class="label">المجموع الكلي</span>
-                            <span id="resTotal" class="val">--</span>
-                        </div>
-                        <div class="metric-item highlight">
-                            <span class="label">النسبة المئوية</span>
-                            <span id="resPercentage" class="val">--</span>
-                        </div>
-                    </div>
-
-                    <div class="card-actions">
-                        <button onclick="window.print()" class="btn-outline-sm">طباعة النتيجة 🖨️</button>
-                    </div>
-                </article>
+                </div>
             </section>
 
-            <!-- Admin Authentication & Management Section -->
-            <section id="adminSection" class="view-card hidden">
-                <div class="card-header">
-                    <h2>لوحة التحكم والإدارة</h2>
-                    <p>رفع وتحديث قاعدة بيانات نتائج الطلاب (CSV Format)</p>
-                </div>
-
-                <!-- Auth Modal Container -->
+            <!-- Admin Portal -->
+            <section id="adminSection" class="form-card hidden">
+                <h2 class="card-title">لوحة تحكم الإدارة</h2>
                 <div id="adminAuthBox" class="auth-box">
-                    <div class="field-group-vertical">
-                        <label for="adminPass">كلمة المرور الخاصة بالمشرف</label>
-                        <input type="password" id="adminPass" placeholder="أدخل كلمة المرور">
-                        <button id="loginBtn" class="btn-primary">دخول النظام</button>
+                    <div class="input-field">
+                        <label>كلمة المرور</label>
+                        <input type="password" id="adminPass" placeholder="أدخل كلمة المرور (123456)">
                     </div>
+                    <button id="loginBtn" class="btn-submit">دخول</button>
                 </div>
 
-                <!-- Control Panel Content -->
                 <div id="adminControlBox" class="control-box hidden">
-                    <div class="upload-dropzone" id="dropzone">
+                    <div id="dropzone" class="dropzone-area">
                         <input type="file" id="csvFileInput" accept=".csv" hidden>
-                        <div class="dropzone-label">
-                            <span class="upload-icon">📁</span>
-                            <p>اضغط هنا أو اسحب ملف CSV المكون من الطلاب إلى هذه المنطقة</p>
-                            <span class="sub-label">الملفات المدعومة: CSV بحجم أقصى 10MB</span>
-                        </div>
+                        <p>اضغط هنا لرفع ملف الـ CSV</p>
                     </div>
-
-                    <div class="system-status">
-                        <h4>حالة السجل المحلي:</h4>
-                        <p>عدد الطلاب المسجلين حالياً: <strong id="recordCount">0</strong> طالب</p>
-                    </div>
-
-                    <div class="control-actions">
-                        <button id="purgeDataBtn" class="btn-danger-sm">محي البيانات الحالية</button>
-                    </div>
+                    <p class="status-info">عدد الطلاب المسجلين: <strong id="recordCount">0</strong></p>
+                    <button id="purgeDataBtn" class="btn-danger">مسح البيانات</button>
                 </div>
             </section>
         </main>
@@ -123,4 +130,3 @@
     <script src="app.js"></script>
 </body>
 </html>
-
