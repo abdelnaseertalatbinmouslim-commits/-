@@ -1,29 +1,30 @@
-// Database storage identifier
+// Local Database Key & Auth Passcode
 const DB_STORAGE_KEY = 'aun_sports_results_db';
-const ADMIN_KEY_HASH = '123456'; // Default system admin access passcode
+const ADMIN_PASS = '123456';
 
-// State Variables
 let currentDatabase = [];
 
-// DOM Element Registry
+// DOM Elements
 const elements = {
+    toggleAdminBtn: document.getElementById('toggleAdminBtn'),
     studentSection: document.getElementById('studentSection'),
     adminSection: document.getElementById('adminSection'),
-    toggleAdminBtn: document.getElementById('toggleAdminBtn'),
     searchForm: document.getElementById('searchForm'),
     searchInput: document.getElementById('searchInput'),
+    yearSelect: document.getElementById('yearSelect'),
+    deptSelect: document.getElementById('deptSelect'),
     searchFeedback: document.getElementById('searchFeedback'),
-    resultCard: document.getElementById('resultCard'),
+    resultModal: document.getElementById('resultModal'),
     
-    // Result Details
+    // Result Fields
     resName: document.getElementById('resName'),
-    resDepartment: document.getElementById('resDepartment'),
+    resStatus: document.getElementById('resStatus'),
     resSeat: document.getElementById('resSeat'),
     resNID: document.getElementById('resNID'),
     resYear: document.getElementById('resYear'),
+    resDept: document.getElementById('resDept'),
     resTotal: document.getElementById('resTotal'),
     resPercentage: document.getElementById('resPercentage'),
-    resStatus: document.getElementById('resStatus'),
     
     // Admin Controls
     adminAuthBox: document.getElementById('adminAuthBox'),
@@ -36,7 +37,7 @@ const elements = {
     purgeDataBtn: document.getElementById('purgeDataBtn')
 };
 
-// System Initializer
+// Initialize App
 document.addEventListener('DOMContentLoaded', () => {
     loadDatabase();
     bindEvents();
@@ -58,8 +59,6 @@ function bindEvents() {
     if (elements.toggleAdminBtn) elements.toggleAdminBtn.addEventListener('click', toggleViews);
     if (elements.searchForm) elements.searchForm.addEventListener('submit', handleSearch);
     if (elements.loginBtn) elements.loginBtn.addEventListener('click', handleAdminAuth);
-    
-    // Admin CSV File Handlers
     if (elements.dropzone) elements.dropzone.addEventListener('click', () => elements.csvFileInput.click());
     if (elements.csvFileInput) elements.csvFileInput.addEventListener('change', handleFileUpload);
     if (elements.purgeDataBtn) elements.purgeDataBtn.addEventListener('click', purgeDatabase);
@@ -78,45 +77,59 @@ function toggleViews() {
     }
 }
 
-function handleSearch() {
+function handleSearch(e) {
+    if (e) e.preventDefault();
+    
     const query = elements.searchInput.value.trim();
     hideFeedback();
-    elements.resultCard.classList.add('hidden');
+    elements.resultModal.classList.add('hidden');
 
-    if (!query) return;
-
-    if (currentDatabase.length === 0) {
-        showFeedback('قاعدة البيانات فارغة حالياً. يرجى مراجعة إدارة الكلية.', 'error');
+    if (!query) {
+        showFeedback('يرجى إدخال رقم الجلوس أو اسم الطالب', 'error');
         return;
     }
 
-    // Direct search matching Seat Number or National Identity
+    if (currentDatabase.length === 0) {
+        showFeedback('قاعدة البيانات فارغة حالياً. ادخل على لوحة الإدارة وارفع ملف النتائج أولاً.', 'error');
+        return;
+    }
+
+    // Search directly using seat number, national ID, or name match
     const record = currentDatabase.find(student => 
-        student.seatNo === query || student.nationalId === query
+        student.seatNo === query || 
+        student.nationalId === query || 
+        student.name.includes(query)
     );
 
     if (record) {
-        renderStudentResult(record);
+        renderResult(record);
     } else {
-        showFeedback('لم يتم العثور على نتائج تطابق رقم الجلوس أو الرقم القومي المدخل.', 'error');
+        showFeedback('لم يتم العثور على نتائج تطابق البيانات المدخلة. تأكد من رقم الجلوس.', 'error');
     }
 }
 
-function renderStudentResult(record) {
+function renderResult(record) {
     elements.resName.textContent = record.name;
-    elements.resDepartment.textContent = record.department || 'عام';
+    elements.resStatus.textContent = record.status;
     elements.resSeat.textContent = record.seatNo;
     elements.resNID.textContent = record.nationalId;
     elements.resYear.textContent = record.year;
+    elements.resDept.textContent = record.department;
     elements.resTotal.textContent = record.total;
     elements.resPercentage.textContent = record.percentage + '%';
-    elements.resStatus.textContent = record.status;
 
-    elements.resultCard.classList.remove('hidden');
+    // Style Status Badge
+    if (record.status === 'راسب') {
+        elements.resStatus.style.backgroundColor = '#ef4444';
+    } else {
+        elements.resStatus.style.backgroundColor = '#10b981';
+    }
+
+    elements.resultModal.classList.remove('hidden');
 }
 
-function showFeedback(message, type) {
-    elements.searchFeedback.textContent = message;
+function showFeedback(msg, type) {
+    elements.searchFeedback.textContent = msg;
     elements.searchFeedback.className = `feedback-msg ${type}`;
 }
 
@@ -126,7 +139,7 @@ function hideFeedback() {
 
 function handleAdminAuth() {
     const pass = elements.adminPass.value;
-    if (pass === ADMIN_KEY_HASH) {
+    if (pass === ADMIN_PASS) {
         elements.adminAuthBox.classList.add('hidden');
         elements.adminControlBox.classList.remove('hidden');
     } else {
@@ -140,17 +153,15 @@ function handleFileUpload(e) {
 
     const reader = new FileReader();
     reader.onload = function(event) {
-        const text = event.target.result;
-        parseAndStoreCSV(text);
+        parseAndStoreCSV(event.target.result);
     };
     reader.readAsText(file);
 }
 
-function parseAndStoreCSV(csvContent) {
-    const lines = csvContent.split('\n');
+function parseAndStoreCSV(csvText) {
+    const lines = csvText.split('\n');
     const parsedData = [];
 
-    // Skip Header Index (Line 0)
     for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
@@ -174,18 +185,17 @@ function parseAndStoreCSV(csvContent) {
         currentDatabase = parsedData;
         localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(currentDatabase));
         elements.recordCount.textContent = currentDatabase.length;
-        alert(`تم رفع وتحديث البيانات بنجاح! عدد الطلاب المسجلين: ${parsedData.length}`);
+        alert(`تم رفع البيانات بنجاح! إجمالي عدد الطلاب: ${parsedData.length}`);
     } else {
-        alert('حدث خطأ أثناء قراءة الملف. تأكد من تصفيف الأعمدة بالشكل الصحيح.');
+        alert('حدث خطأ في قراءة الملف.');
     }
 }
 
 function purgeDatabase() {
-    if (confirm('هل أنت تأكد من محو جميع السجلات الحالية من النظام؟')) {
+    if (confirm('هل أنت تأكد من محو البيانات؟')) {
         localStorage.removeItem(DB_STORAGE_KEY);
         currentDatabase = [];
         elements.recordCount.textContent = '0';
-        alert('تمت إزالة قاعدة البيانات.');
+        alert('تم مسح البيانات.');
     }
 }
-
