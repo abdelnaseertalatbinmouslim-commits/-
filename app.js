@@ -11,8 +11,6 @@ const elements = {
     adminSection: document.getElementById('adminSection'),
     searchForm: document.getElementById('searchForm'),
     searchInput: document.getElementById('searchInput'),
-    yearSelect: document.getElementById('yearSelect'),
-    deptSelect: document.getElementById('deptSelect'),
     searchFeedback: document.getElementById('searchFeedback'),
     resultModal: document.getElementById('resultModal'),
     
@@ -94,7 +92,6 @@ function handleSearch(e) {
         return;
     }
 
-    // Search directly using seat number, national ID, or name match
     const record = currentDatabase.find(student => 
         student.seatNo === query || 
         student.nationalId === query || 
@@ -116,10 +113,39 @@ function renderResult(record) {
     elements.resYear.textContent = record.year;
     elements.resDept.textContent = record.department;
     elements.resTotal.textContent = record.total;
-    elements.resPercentage.textContent = record.percentage + '%';
+    elements.resPercentage.textContent = record.percentage;
 
-    // Style Status Badge
-    if (record.status === 'راسب') {
+    // Build Detailed Subject Table Dynamic Component
+    let tableHTML = `
+        <table style="width: 100%; margin-top: 15px; border-collapse: collapse; text-align: center; font-size: 0.85rem; border: 1px solid #e2e8f0;">
+            <thead>
+                <tr style="background-color: #f1f5f9; color: #1e293b;">
+                    <th style="padding: 6px; border: 1px solid #cbd5e1;">المادة</th>
+                    <th style="padding: 6px; border: 1px solid #cbd5e1;">الدرجة العظمى</th>
+                    <th style="padding: 6px; border: 1px solid #cbd5e1;">الدرجة المكتسبة</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="padding: 6px; border: 1px solid #e2e8f0;">التشريح الوظيفي</td><td style="padding: 6px; border: 1px solid #e2e8f0;">100</td><td style="padding: 6px; border: 1px solid #e2e8f0;">${record.sub1}</td></tr>
+                <tr><td style="padding: 6px; border: 1px solid #e2e8f0;">علم النفس الرياضي</td><td style="padding: 6px; border: 1px solid #e2e8f0;">100</td><td style="padding: 6px; border: 1px solid #e2e8f0;">${record.sub2}</td></tr>
+                <tr><td style="padding: 6px; border: 1px solid #e2e8f0;">التدريب الميداني</td><td style="padding: 6px; border: 1px solid #e2e8f0;">100</td><td style="padding: 6px; border: 1px solid #e2e8f0;">${record.sub3}</td></tr>
+                <tr><td style="padding: 6px; border: 1px solid #e2e8f0;">الإصابات والتأهيل</td><td style="padding: 6px; border: 1px solid #e2e8f0;">100</td><td style="padding: 6px; border: 1px solid #e2e8f0;">${record.sub4}</td></tr>
+                <tr><td style="padding: 6px; border: 1px solid #e2e8f0;">نظريات ومناهج التربية الرياضية</td><td style="padding: 6px; border: 1px solid #e2e8f0;">100</td><td style="padding: 6px; border: 1px solid #e2e8f0;">${record.sub5}</td></tr>
+            </tbody>
+        </table>
+    `;
+
+    // Append table to modal if not exists
+    let tableContainer = document.getElementById('gradesTableContainer');
+    if (!tableContainer) {
+        tableContainer = document.createElement('div');
+        tableContainer.id = 'gradesTableContainer';
+        document.querySelector('.res-grid').after(tableContainer);
+    }
+    tableContainer.innerHTML = tableHTML;
+
+    // Status Pill Styling
+    if (record.status.includes('راسب')) {
         elements.resStatus.style.backgroundColor = '#ef4444';
     } else {
         elements.resStatus.style.backgroundColor = '#10b981';
@@ -167,16 +193,21 @@ function parseAndStoreCSV(csvText) {
         if (!line) continue;
 
         const cols = line.split(',');
-        if (cols.length >= 7) {
+        if (cols.length >= 12) {
             parsedData.push({
                 seatNo: cols[0].trim(),
                 nationalId: cols[1].trim(),
                 name: cols[2].trim(),
                 year: cols[3].trim(),
                 department: cols[4].trim(),
-                total: cols[5].trim(),
-                percentage: cols[6].trim(),
-                status: cols[7] ? cols[7].trim() : 'ناجح'
+                sub1: cols[5].trim(),
+                sub2: cols[6].trim(),
+                sub3: cols[7].trim(),
+                sub4: cols[8].trim(),
+                sub5: cols[9].trim(),
+                total: cols[10].trim(),
+                percentage: cols[11].trim(),
+                status: cols[12] ? cols[12].trim() : 'ناجح'
             });
         }
     }
@@ -185,9 +216,9 @@ function parseAndStoreCSV(csvText) {
         currentDatabase = parsedData;
         localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(currentDatabase));
         elements.recordCount.textContent = currentDatabase.length;
-        alert(`تم رفع البيانات بنجاح! إجمالي عدد الطلاب: ${parsedData.length}`);
+        alert(`تم رفع الملف بنجاح! إجمالي عدد الطلاب: ${parsedData.length}`);
     } else {
-        alert('حدث خطأ في قراءة الملف.');
+        alert('حدث خطأ في قراءة صيغة الأعمدة المخصصة للمواد.');
     }
 }
 
